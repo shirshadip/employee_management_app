@@ -7,7 +7,7 @@ class EmployeeManagementSystem:
         self.root = root
         self.root.title("employee management system")
         self.root.geometry("800x600")
-        self.root.configure(bg="#FFFFFF")
+        self.root.configure(bg="#DDDDDB")
 
         # database conn
         self.db_config = {
@@ -23,7 +23,7 @@ class EmployeeManagementSystem:
         # styling
         self.style = ttk.Style()
         self.style.theme_use("clam")
-        self.style.configure("TFrame", background="white", font=("Inter", 10))
+        self.style.configure("TFrame", background="#fffff4", font=("Inter", 10))
         self.style.configure("TButton", font=("Inter", 10, "bold"), padding=6,
                              background="#e16c23", foreground="white", borderwidth=0, relief="flat")
         self.style.map("TButton", background=[('active', '#45a049')])
