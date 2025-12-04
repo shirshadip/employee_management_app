@@ -1,12 +1,20 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 import mysql.connector
+import os
 
 class EmployeeManagementSystem:
     def __init__(self, root):
         self.root = root
-        self.root.title("employee management system")
+        # Friendly application name and ensure windowed (not fullscreen)
+        self.root.title("EmployeeManagementSystem")
         self.root.geometry("800x600")
+        # Ensure the window is not started in fullscreen by mistake and is resizable
+        try:
+            self.root.attributes('-fullscreen', False)
+        except Exception:
+            pass
+        self.root.resizable(True, True)
         self.root.configure(bg="#DDDDDB")
 
         # database conn
@@ -249,6 +257,37 @@ class EmployeeManagementSystem:
 
 if __name__ == "__main__":
     root = tk.Tk()
+    # Load window icon robustly: look in the script directory or the
+    # PyInstaller extraction folder (sys._MEIPASS) for app.png or app.ico.
+    try:
+        import sys
+
+        base_dir = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+        png_path = os.path.join(base_dir, "app.png")
+        ico_path = os.path.join(base_dir, "app.ico")
+
+        if os.path.exists(png_path):
+            try:
+                root.iconphoto(False, tk.PhotoImage(file=png_path))
+            except Exception:
+                # If PhotoImage fails for any reason, fall back to .ico
+                if os.path.exists(ico_path):
+                    try:
+                        root.iconbitmap(ico_path)
+                    except Exception:
+                        pass
+        elif os.path.exists(ico_path):
+            try:
+                root.iconbitmap(ico_path)
+            except Exception:
+                pass
+        else:
+            # No icon file bundled; continue without setting an icon
+            pass
+    except Exception as e:
+        # Unexpected error while setting icon; continue execution.
+        print("Warning: could not set window icon:", e)
+
     app = EmployeeManagementSystem(root)
     root.protocol("WM_DELETE_WINDOW", app.on_closing)
     root.mainloop()
