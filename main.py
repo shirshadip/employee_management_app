@@ -24,6 +24,7 @@ class EmployeeManagementSystem:
             'passwd': 'Shirshadip@123',
             'database': 'shirshadip_database'
         }
+        #database is hosten on wamp server localhost
         self.conn = None
         self.cursor = None
         self.connect_db()
