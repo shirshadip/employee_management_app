@@ -2,6 +2,10 @@
 
 A simple and clean desktop employee management application built with Python, Tkinter, and MySQL. It allows you to add, update, delete, search, and view employee records from a database.
 
+# Windows Executable Application Download
+
+[Download EmployeeManagementSystem.exe](./dist/EmployeeManagementSystem.exe)
+
 ## Features
 
 - Add new employees
