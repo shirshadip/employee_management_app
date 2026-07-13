@@ -1,256 +1,646 @@
-# Employee Management System
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Employee Management System — Python · Tkinter · MySQL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0B1220;
+    --panel: #121B2E;
+    --panel-2: #17233B;
+    --panel-3: #1D2A45;
+    --line: #253355;
+    --line-soft: #1B2740;
+    --text: #E7ECF3;
+    --text-dim: #8B98B8;
+    --text-dimmer: #5E6C8C;
+    --teal: #4FD8C4;
+    --teal-dim: #2C9E8F;
+    --amber: #F5B759;
+    --red: #E8788A;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Inter', sans-serif;
+  }
 
-A simple and clean desktop employee management application built with Python, Tkinter, and MySQL. It allows you to add, update, delete, search, and view employee records from a database.
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
 
-# Windows Executable Application Download
+  ::selection{ background:var(--teal); color:#06110F; }
 
-[Download EmployeeManagementSystem.exe](./dist/EmployeeManagementSystem.exe)
+  a{color:inherit; text-decoration:none;}
 
-## Features
+  .wrap{ max-width:1080px; margin:0 auto; padding:0 32px; }
 
-- Add new employees
-- Update selected employee details
-- Delete employees safely
-- Search employees by name or position
-- Sort records by column
-- Display salary summary totals
-- Database connection configured through environment variables
-- Build a standalone Windows executable with PyInstaller
+  /* subtle grid texture behind everything */
+  body::before{
+    content:"";
+    position:fixed; inset:0;
+    background-image:
+      linear-gradient(var(--line-soft) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line-soft) 1px, transparent 1px);
+    background-size: 64px 64px;
+    opacity:0.35;
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 10%, transparent 70%);
+    pointer-events:none;
+    z-index:0;
+  }
 
-## Tech Stack
+  /* ---------- NAV ---------- */
+  nav{
+    position:sticky; top:0; z-index:50;
+    background:rgba(11,18,32,0.85);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line-soft);
+  }
+  nav .wrap{ display:flex; align-items:center; justify-content:space-between; height:64px; }
+  .logo{ font-family:var(--mono); font-weight:700; font-size:15px; letter-spacing:0.02em; display:flex; align-items:center; gap:8px; }
+  .logo .dot{ width:8px; height:8px; border-radius:2px; background:var(--teal); box-shadow:0 0 12px var(--teal); }
+  .nav-links{ display:flex; gap:28px; font-size:13.5px; color:var(--text-dim); }
+  .nav-links a:hover{ color:var(--teal); }
+  .nav-cta{
+    font-family:var(--mono); font-size:12.5px; font-weight:600;
+    padding:8px 14px; border:1px solid var(--teal-dim); border-radius:6px;
+    color:var(--teal); background:rgba(79,216,196,0.06);
+  }
+  .nav-cta:hover{ background:rgba(79,216,196,0.14); }
+  @media (max-width:760px){ .nav-links{ display:none; } }
 
-- Python 3.9+
-- Tkinter for the desktop UI
-- MySQL / MariaDB
-- mysql-connector-python
-- PyInstaller
+  /* ---------- HERO ---------- */
+  header.hero{ position:relative; z-index:1; padding:96px 0 64px; }
+  .eyebrow{
+    font-family:var(--mono); font-size:12.5px; color:var(--teal);
+    letter-spacing:0.12em; text-transform:uppercase; margin-bottom:18px;
+    display:flex; align-items:center; gap:10px;
+  }
+  .eyebrow::before{ content:"//"; color:var(--text-dimmer); }
+  h1{
+    font-family:var(--mono); font-weight:800; font-size:clamp(32px, 5vw, 52px);
+    line-height:1.12; letter-spacing:-0.01em; max-width:760px;
+    color:#fff;
+  }
+  h1 span{ color:var(--teal); }
+  .hero p.lead{
+    margin-top:22px; font-size:17px; color:var(--text-dim); max-width:560px;
+  }
+  .hero-actions{ display:flex; gap:14px; margin-top:32px; flex-wrap:wrap; }
+  .btn{
+    font-family:var(--mono); font-size:13.5px; font-weight:600;
+    padding:12px 20px; border-radius:7px; display:inline-flex; align-items:center; gap:8px;
+    border:1px solid transparent; transition:transform 0.15s ease, background 0.15s ease;
+  }
+  .btn:hover{ transform:translateY(-1px); }
+  .btn-primary{ background:var(--teal); color:#06140F; }
+  .btn-primary:hover{ background:#63e6d3; }
+  .btn-ghost{ border-color:var(--line); color:var(--text); background:var(--panel); }
+  .btn-ghost:hover{ border-color:var(--teal-dim); color:var(--teal); }
 
-## Project Structure
+  /* --- terminal / app window mockup --- */
+  .app-window{
+    margin-top:56px; border-radius:12px; overflow:hidden;
+    border:1px solid var(--line); background:var(--panel);
+    box-shadow:0 30px 70px -30px rgba(0,0,0,0.7);
+    max-width:720px;
+  }
+  .app-titlebar{
+    display:flex; align-items:center; gap:8px; padding:10px 14px;
+    background:var(--panel-2); border-bottom:1px solid var(--line);
+  }
+  .app-titlebar .tl{ width:11px; height:11px; border-radius:50%; }
+  .tl.r{ background:#F1685E; } .tl.y{ background:#F4BF4F; } .tl.g{ background:#63C554; }
+  .app-titlebar .title{
+    margin-left:8px; font-family:var(--mono); font-size:12px; color:var(--text-dim);
+  }
+  .app-body{ padding:0; }
+  table.mock{ width:100%; border-collapse:collapse; font-family:var(--mono); font-size:13px; }
+  table.mock thead th{
+    text-align:left; padding:12px 18px; color:var(--teal); font-weight:600;
+    border-bottom:1px solid var(--line); background:rgba(79,216,196,0.04);
+    font-size:11.5px; letter-spacing:0.06em; text-transform:uppercase;
+  }
+  table.mock tbody td{
+    padding:11px 18px; border-bottom:1px solid var(--line-soft); color:var(--text-dim);
+  }
+  table.mock tbody tr:hover td{ background:rgba(255,255,255,0.02); color:var(--text); }
+  table.mock tbody tr:last-child td{ border-bottom:none; }
+  .app-footer{
+    display:flex; justify-content:space-between; padding:10px 18px;
+    font-family:var(--mono); font-size:11.5px; color:var(--text-dimmer);
+    border-top:1px solid var(--line); background:var(--panel-2);
+  }
+  .blink{ display:inline-block; width:7px; height:13px; background:var(--teal); margin-left:2px; animation:blink 1s step-end infinite; vertical-align:-2px; }
+  @keyframes blink{ 50%{ opacity:0; } }
 
-- main.py — main application source entry point
-- EmployeeManagementSystem.exe — generated Windows executable output
-- Database_Schema.sql — MySQL database schema and sample data
-- enviroment.bat — Windows CMD environment setup
-- enviroment.ps1 — Windows PowerShell environment setup
-- enviroment.zsh — macOS/Linux shell environment setup
-- setup.bat — one-click Windows setup and launch script
-- setup.sh — one-click macOS/Linux setup and launch script
-- EmployeeManagementSystem.spec — PyInstaller build configuration
+  /* ---------- SECTION shells ---------- */
+  section{ position:relative; z-index:1; padding:88px 0; border-top:1px solid var(--line-soft); }
+  .section-head{ margin-bottom:44px; max-width:640px; }
+  .section-head .eyebrow{ margin-bottom:14px; }
+  .section-head h2{ font-family:var(--mono); font-weight:700; font-size:clamp(24px,3vw,32px); color:#fff; }
+  .section-head p{ color:var(--text-dim); margin-top:12px; font-size:15px; }
 
-## Prerequisites
+  /* ---------- FEATURES (labeled by real SQL operations) ---------- */
+  .feature-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--line-soft); border:1px solid var(--line-soft); border-radius:12px; overflow:hidden; }
+  .feature{ background:var(--panel); padding:28px 26px; }
+  .feature .op{
+    font-family:var(--mono); font-size:12px; color:var(--amber); background:rgba(245,183,89,0.08);
+    display:inline-block; padding:3px 8px; border-radius:5px; margin-bottom:16px; letter-spacing:0.02em;
+  }
+  .feature h3{ font-size:16px; font-weight:600; color:#fff; margin-bottom:8px; }
+  .feature p{ font-size:13.5px; color:var(--text-dim); }
+  @media (max-width:760px){ .feature-grid{ grid-template-columns:1fr; } }
 
-Before running this project, make sure you have:
+  /* ---------- STACK badges ---------- */
+  .stack-row{ display:flex; flex-wrap:wrap; gap:12px; }
+  .badge{
+    font-family:var(--mono); font-size:13px; padding:9px 16px; border-radius:20px;
+    border:1px solid var(--line); background:var(--panel); color:var(--text-dim);
+    display:flex; align-items:center; gap:8px;
+  }
+  .badge .sq{ width:7px; height:7px; background:var(--teal); border-radius:2px; }
 
-- Python installed
-- MySQL server running
-- XAMPP (recommended for local development) or another MySQL setup
-- pip available for installing Python packages
+  /* ---------- TABS ---------- */
+  .tabs{ display:flex; gap:4px; margin-bottom:0; border-bottom:1px solid var(--line); }
+  .tab{
+    font-family:var(--mono); font-size:12.5px; padding:10px 16px; color:var(--text-dimmer);
+    cursor:pointer; border-bottom:2px solid transparent; user-select:none;
+  }
+  .tab.active{ color:var(--teal); border-bottom-color:var(--teal); }
+  .tab-panel{ display:none; }
+  .tab-panel.active{ display:block; }
 
-## 1. Install Python
+  /* ---------- CODE BLOCKS ---------- */
+  .code{
+    position:relative; background:#0D1526; border:1px solid var(--line); border-radius:9px;
+    margin-top:16px; overflow:hidden;
+  }
+  .code .bar{ display:flex; justify-content:space-between; align-items:center; padding:9px 14px; border-bottom:1px solid var(--line); background:var(--panel-2); }
+  .code .bar span{ font-family:var(--mono); font-size:11px; color:var(--text-dimmer); }
+  .copy-btn{
+    font-family:var(--mono); font-size:11px; color:var(--text-dim); background:transparent;
+    border:1px solid var(--line); border-radius:5px; padding:4px 9px; cursor:pointer;
+  }
+  .copy-btn:hover{ border-color:var(--teal-dim); color:var(--teal); }
+  .code pre{ padding:16px 18px; overflow-x:auto; font-family:var(--mono); font-size:13px; line-height:1.7; }
+  .code pre code{ color:#C7D3EA; }
+  .k{ color:var(--teal); } .s{ color:var(--amber); } .c{ color:var(--text-dimmer); }
 
-Download and install Python from the official website:
+  /* ---------- STEPS ---------- */
+  .steps{ counter-reset:step; }
+  .step{ display:flex; gap:20px; padding:22px 0; border-top:1px solid var(--line-soft); }
+  .step:first-child{ border-top:none; }
+  .step-num{
+    counter-increment:step; font-family:var(--mono); font-weight:700; font-size:13px; color:var(--teal);
+    flex:none; width:36px; height:36px; border:1px solid var(--line); border-radius:8px;
+    display:flex; align-items:center; justify-content:center; background:var(--panel);
+  }
+  .step-num::before{ content: counter(step, decimal-leading-zero); }
+  .step-body h4{ font-size:15px; font-weight:600; color:#fff; margin-bottom:4px; }
+  .step-body p{ font-size:13.5px; color:var(--text-dim); }
 
-https://www.python.org/downloads/
+  /* ---------- SCHEMA ---------- */
+  .schema-grid{ display:grid; grid-template-columns:1.1fr 1fr; gap:28px; align-items:start; }
+  @media (max-width:820px){ .schema-grid{ grid-template-columns:1fr; } }
+  .field-list{ border:1px solid var(--line); border-radius:10px; overflow:hidden; }
+  .field{ display:flex; justify-content:space-between; padding:12px 16px; font-family:var(--mono); font-size:12.5px; border-top:1px solid var(--line-soft); }
+  .field:first-child{ border-top:none; }
+  .field .name{ color:var(--text); }
+  .field .type{ color:var(--text-dimmer); }
+  .field .pk{ color:var(--amber); font-size:10.5px; border:1px solid rgba(245,183,89,0.3); padding:1px 6px; border-radius:4px; margin-left:8px; }
 
-During installation, make sure to enable the option to add Python to PATH.
+  /* ---------- FAQ / troubleshooting ---------- */
+  .faq{ border:1px solid var(--line); border-radius:10px; overflow:hidden; }
+  .faq-item{ border-top:1px solid var(--line-soft); }
+  .faq-item:first-child{ border-top:none; }
+  .faq-q{
+    padding:18px 20px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;
+    font-size:14.5px; font-weight:600; color:#fff; background:var(--panel);
+  }
+  .faq-q .plus{ font-family:var(--mono); color:var(--teal); transition:transform 0.2s ease; }
+  .faq-item.open .plus{ transform:rotate(45deg); }
+  .faq-a{ max-height:0; overflow:hidden; transition:max-height 0.25s ease; background:var(--panel); }
+  .faq-item.open .faq-a{ max-height:200px; }
+  .faq-a-inner{ padding:0 20px 18px; font-size:13.5px; color:var(--text-dim); }
 
-## 2. Install and Start XAMPP (Recommended)
+  /* ---------- FOOTER ---------- */
+  footer{ padding:56px 0 40px; border-top:1px solid var(--line-soft); }
+  .foot-grid{ display:flex; justify-content:space-between; flex-wrap:wrap; gap:24px; }
+  footer .col h5{ font-family:var(--mono); font-size:12px; color:var(--teal); margin-bottom:12px; text-transform:uppercase; letter-spacing:0.08em; }
+  footer .col a, footer .col p{ display:block; font-size:13.5px; color:var(--text-dim); margin-bottom:8px; }
+  footer .col a:hover{ color:var(--teal); }
+  .fine{ margin-top:40px; padding-top:24px; border-top:1px solid var(--line-soft); font-family:var(--mono); font-size:11.5px; color:var(--text-dimmer); display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px; }
 
-If you are using XAMPP for MySQL:
+  ::-webkit-scrollbar{ height:8px; width:8px; }
+  ::-webkit-scrollbar-thumb{ background:var(--line); border-radius:4px; }
+</style>
+</head>
+<body>
 
-1. Download and install XAMPP
-2. Start the XAMPP Control Panel
-3. Start Apache and MySQL
-4. Open phpMyAdmin in your browser:
-   - http://localhost/phpmyadmin
+<nav>
+  <div class="wrap">
+    <div class="logo"><span class="dot"></span>employees.db</div>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#quickstart">Quick start</a>
+      <a href="#schema">Schema</a>
+      <a href="#build">Build</a>
+      <a href="#help">Troubleshooting</a>
+    </div>
+    <a class="nav-cta" href="./dist/EmployeeManagementSystem.exe">Download .exe ↓</a>
+  </div>
+</nav>
 
-## 3. Create the Database
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">python · tkinter · mysql</div>
+    <h1>A small, honest way to<br>manage <span>employee records.</span></h1>
+    <p class="lead">No web server, no bloat, no dashboard you didn't ask for. Just a clean desktop app for adding, updating, searching, and reporting on employee data — backed by a real MySQL table.</p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="./dist/EmployeeManagementSystem.exe">Download for Windows</a>
+      <a class="btn btn-ghost" href="#quickstart">Run it from source →</a>
+    </div>
 
-You can create the database in two ways:
+    <div class="app-window">
+      <div class="app-titlebar">
+        <span class="tl r"></span><span class="tl y"></span><span class="tl g"></span>
+        <span class="title">EmployeeManagementSystem.exe</span>
+      </div>
+      <div class="app-body">
+        <table class="mock">
+          <thead>
+            <tr><th>id</th><th>name</th><th>position</th><th>salary</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>01</td><td>A. Kapoor</td><td>Engineer</td><td>₹82,000</td></tr>
+            <tr><td>02</td><td>R. Chen</td><td>Designer</td><td>₹74,500</td></tr>
+            <tr><td>03</td><td>S. Alvarez</td><td>Manager</td><td>₹96,200</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="app-footer">
+        <span>3 records</span>
+        <span>SELECT * FROM employees<span class="blink"></span></span>
+      </div>
+    </div>
+  </div>
+</header>
 
-### Option A — Import the SQL file
+<section id="features">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">what it does</div>
+      <h2>Every feature maps to one SQL operation</h2>
+      <p>Nothing hidden behind the UI — each button in the app corresponds directly to a query running against your <code>employees</code> table.</p>
+    </div>
+    <div class="feature-grid">
+      <div class="feature">
+        <span class="op">INSERT INTO</span>
+        <h3>Add new employees</h3>
+        <p>Create a new record with name, position, and salary in one form.</p>
+      </div>
+      <div class="feature">
+        <span class="op">UPDATE ... SET</span>
+        <h3>Update selected details</h3>
+        <p>Edit any field on an existing employee and save the change instantly.</p>
+      </div>
+      <div class="feature">
+        <span class="op">DELETE FROM</span>
+        <h3>Delete employees safely</h3>
+        <p>Remove a record with a confirmation step so nothing is lost by accident.</p>
+      </div>
+      <div class="feature">
+        <span class="op">SELECT ... WHERE</span>
+        <h3>Search by name or position</h3>
+        <p>Filter the table live as you type, no separate search screen needed.</p>
+      </div>
+      <div class="feature">
+        <span class="op">ORDER BY</span>
+        <h3>Sort by any column</h3>
+        <p>Click a column header to sort records ascending or descending.</p>
+      </div>
+      <div class="feature">
+        <span class="op">SUM(salary)</span>
+        <h3>Salary summary totals</h3>
+        <p>See the total payroll for the currently filtered set of employees.</p>
+      </div>
+    </div>
+  </div>
+</section>
 
-1. Open phpMyAdmin
-2. Create a new database named Employees
-3. Go to Import
-4. Choose Database_Schema.sql
-5. Click Go
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">tech stack</div>
+      <h2>Built with plain, dependable tools</h2>
+    </div>
+    <div class="stack-row">
+      <span class="badge"><span class="sq"></span>Python 3.9+</span>
+      <span class="badge"><span class="sq"></span>Tkinter (desktop UI)</span>
+      <span class="badge"><span class="sq"></span>MySQL / MariaDB</span>
+      <span class="badge"><span class="sq"></span>mysql-connector-python</span>
+      <span class="badge"><span class="sq"></span>PyInstaller</span>
+    </div>
+  </div>
+</section>
 
-### Option B — Run the SQL manually
+<section id="quickstart">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">getting started</div>
+      <h2>Set it up in under five minutes</h2>
+      <p>Prerequisites: Python installed and on PATH, a running MySQL server (XAMPP works well locally), and pip.</p>
+    </div>
 
-Run the following SQL in MySQL:
+    <div class="tabs" id="os-tabs">
+      <div class="tab active" data-tab="win">Windows</div>
+      <div class="tab" data-tab="mac">macOS / Linux</div>
+    </div>
 
-```sql
-CREATE DATABASE IF NOT EXISTS Employees
-CHARACTER SET utf8mb4
-COLLATE utf8mb4_unicode_ci;
+    <div class="tab-panel active" id="win-panel">
+      <div class="steps">
+        <div class="step">
+          <div class="step-num"></div>
+          <div class="step-body">
+            <h4>Install Python and MySQL</h4>
+            <p>Grab Python from python.org (enable "Add to PATH"), then install XAMPP and start Apache + MySQL from its control panel.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num"></div>
+          <div class="step-body">
+            <h4>Create the database</h4>
+            <p>Import <code>Database_Schema.sql</code> through phpMyAdmin, or run the schema SQL manually — see the schema section below.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num"></div>
+          <div class="step-body">
+            <h4>Set environment variables</h4>
+            <p>Run <code>enviroment.bat</code>, or set <code>DB_HOST</code>, <code>DB_USER</code>, <code>DB_PASSWORD</code>, and <code>DB_NAME</code> yourself.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num"></div>
+          <div class="step-body">
+            <h4>Run the setup script</h4>
+            <p>Double-click <code>setup.bat</code> — it installs dependencies, imports the schema if needed, and launches the app.</p>
+          </div>
+        </div>
+      </div>
+      <div class="code">
+        <div class="bar"><span>cmd.exe</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><code><span class="c">:: one-click setup and launch</span>
+setup.bat</code></pre>
+      </div>
+    </div>
 
-USE Employees;
-
-CREATE TABLE IF NOT EXISTS employees (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    position VARCHAR(100) NOT NULL,
-    salary DECIMAL(10, 2) NOT NULL CHECK (salary >= 0),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
-```
-
-## 4. Set Up Environment Variables
-
-The application reads database connection values from environment variables.
-
-### Windows Command Prompt
-
-```bat
-set DB_HOST=localhost
-set DB_USER=root
-set DB_PASSWORD=
-set DB_NAME=Employees
-```
-
-### Windows PowerShell
-
-```powershell
-$env:DB_HOST="localhost"
-$env:DB_USER="root"
-$env:DB_PASSWORD=""
-$env:DB_NAME="Employees"
-```
-
-### macOS / Linux / zsh
-
-```zsh
-export DB_HOST=localhost
-export DB_USER=root
-export DB_PASSWORD=
-export DB_NAME=Employees
-```
-
-You can also use the provided environment helper scripts:
-
-- enviroment.bat for Windows CMD
-- enviroment.ps1 for PowerShell
-- enviroment.zsh for zsh/bash-compatible shells
-
-## 5. Install Python Dependencies
-
-Open a terminal in the project folder and run:
-
-```bash
-pip install mysql-connector-python pyinstaller
-```
-
-If you are using a virtual environment, activate it first.
-
-## 6. Quick Setup with Automation Scripts
-
-### Windows
-
-Run:
-
-```bat
-setup.bat
-```
-
-### macOS / Linux
-
-Run:
-
-```bash
+    <div class="tab-panel" id="mac-panel">
+      <div class="steps">
+        <div class="step">
+          <div class="step-num"></div>
+          <div class="step-body">
+            <h4>Install Python and MySQL</h4>
+            <p>Install Python 3.9+ and a local MySQL/MariaDB server, or use XAMPP for a quick local setup.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num"></div>
+          <div class="step-body">
+            <h4>Create the database</h4>
+            <p>Import <code>Database_Schema.sql</code> through phpMyAdmin, or run the schema SQL manually — see the schema section below.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num"></div>
+          <div class="step-body">
+            <h4>Set environment variables</h4>
+            <p>Source <code>enviroment.zsh</code>, or export <code>DB_HOST</code>, <code>DB_USER</code>, <code>DB_PASSWORD</code>, and <code>DB_NAME</code> yourself.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num"></div>
+          <div class="step-body">
+            <h4>Run the setup script</h4>
+            <p>Make it executable and run it — it installs dependencies, imports the schema if needed, and launches the app.</p>
+          </div>
+        </div>
+      </div>
+      <div class="code">
+        <div class="bar"><span>zsh</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><code><span class="c"># one-click setup and launch</span>
 chmod +x setup.sh
-./setup.sh
-```
+./setup.sh</code></pre>
+      </div>
+    </div>
+  </div>
+</section>
 
-These scripts install the required Python packages, attempt to import the database schema, and launch the application.
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">configuration</div>
+      <h2>Environment variables</h2>
+      <p>The app never hardcodes credentials — it reads them from your shell environment at launch.</p>
+    </div>
 
-## 7. Run the Application
+    <div class="tabs" id="env-tabs">
+      <div class="tab active" data-tab="cmd">CMD</div>
+      <div class="tab" data-tab="ps">PowerShell</div>
+      <div class="tab" data-tab="zsh">zsh / bash</div>
+    </div>
 
-For development:
+    <div class="tab-panel active" id="cmd-panel">
+      <div class="code">
+        <div class="bar"><span>cmd.exe</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><code><span class="k">set</span> DB_HOST=localhost
+<span class="k">set</span> DB_USER=root
+<span class="k">set</span> DB_PASSWORD=
+<span class="k">set</span> DB_NAME=Employees</code></pre>
+      </div>
+    </div>
+    <div class="tab-panel" id="ps-panel">
+      <div class="code">
+        <div class="bar"><span>powershell</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><code><span class="k">$env:</span>DB_HOST=<span class="s">"localhost"</span>
+<span class="k">$env:</span>DB_USER=<span class="s">"root"</span>
+<span class="k">$env:</span>DB_PASSWORD=<span class="s">""</span>
+<span class="k">$env:</span>DB_NAME=<span class="s">"Employees"</span></code></pre>
+      </div>
+    </div>
+    <div class="tab-panel" id="zsh-panel">
+      <div class="code">
+        <div class="bar"><span>zsh</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><code><span class="k">export</span> DB_HOST=localhost
+<span class="k">export</span> DB_USER=root
+<span class="k">export</span> DB_PASSWORD=
+<span class="k">export</span> DB_NAME=Employees</code></pre>
+      </div>
+    </div>
+  </div>
+</section>
 
-```bash
-python main.py
-```
+<section id="schema">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">database</div>
+      <h2>The employees table</h2>
+      <p>One table, six columns. Import <code>Database_Schema.sql</code> in phpMyAdmin, or run this directly in MySQL.</p>
+    </div>
+    <div class="schema-grid">
+      <div class="code">
+        <div class="bar"><span>Database_Schema.sql</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><code><span class="k">CREATE DATABASE IF NOT EXISTS</span> Employees
+<span class="k">CHARACTER SET</span> utf8mb4
+<span class="k">COLLATE</span> utf8mb4_unicode_ci;
 
-If you already built the packaged app, you can run the executable directly:
+<span class="k">USE</span> Employees;
 
-```bash
-./dist/EmployeeManagementSystem.exe
-```
+<span class="k">CREATE TABLE IF NOT EXISTS</span> employees (
+    id <span class="s">INT</span> <span class="k">AUTO_INCREMENT PRIMARY KEY</span>,
+    name <span class="s">VARCHAR(100)</span> <span class="k">NOT NULL</span>,
+    position <span class="s">VARCHAR(100)</span> <span class="k">NOT NULL</span>,
+    salary <span class="s">DECIMAL(10, 2)</span> <span class="k">NOT NULL CHECK</span> (salary >= 0),
+    created_at <span class="s">TIMESTAMP</span> <span class="k">DEFAULT CURRENT_TIMESTAMP</span>,
+    updated_at <span class="s">TIMESTAMP</span> <span class="k">DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP</span>
+) <span class="k">ENGINE=InnoDB</span>;</code></pre>
+      </div>
+      <div class="field-list">
+        <div class="field"><span class="name">id <span class="pk">PK</span></span><span class="type">INT, auto-increment</span></div>
+        <div class="field"><span class="name">name</span><span class="type">VARCHAR(100)</span></div>
+        <div class="field"><span class="name">position</span><span class="type">VARCHAR(100)</span></div>
+        <div class="field"><span class="name">salary</span><span class="type">DECIMAL(10,2), ≥ 0</span></div>
+        <div class="field"><span class="name">created_at</span><span class="type">TIMESTAMP</span></div>
+        <div class="field"><span class="name">updated_at</span><span class="type">TIMESTAMP, auto</span></div>
+      </div>
+    </div>
+  </div>
+</section>
 
-On Windows, the packaged executable is typically named EmployeeManagementSystem.exe and will be launched automatically by the setup scripts when it exists.
+<section id="build">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">packaging</div>
+      <h2>Build a standalone .exe</h2>
+      <p>A PyInstaller spec file ships with the project, so most people won't need the manual command.</p>
+    </div>
+    <div class="schema-grid">
+      <div class="code">
+        <div class="bar"><span>using the spec file</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><code>pyinstaller --clean EmployeeManagementSystem.spec</code></pre>
+      </div>
+      <div class="code">
+        <div class="bar"><span>manual build</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><code>pyinstaller --onefile --windowed \
+  --icon app.ico \
+  --add-data <span class="s">"app.png;."</span> \
+  --add-data <span class="s">"app.ico;."</span> \
+  --name EmployeeManagementSystem main.py</code></pre>
+      </div>
+    </div>
+    <p style="margin-top:16px; font-size:13px; color:var(--text-dimmer);">On macOS/Linux, replace the semicolons in <code>--add-data</code> with colons. Output lands in <code>dist/</code>.</p>
+  </div>
+</section>
 
-If you used the environment helper scripts, run them first depending on your shell.
+<section id="help">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">troubleshooting</div>
+      <h2>When something doesn't start</h2>
+    </div>
+    <div class="faq" id="faq">
+      <div class="faq-item open">
+        <div class="faq-q"><span>ModuleNotFoundError: mysql.connector</span><span class="plus">+</span></div>
+        <div class="faq-a"><div class="faq-a-inner">The connector isn't installed in your active environment. Run <code>pip install mysql-connector-python</code> and try again.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><span>Database connection failed</span><span class="plus">+</span></div>
+        <div class="faq-a"><div class="faq-a-inner">Check that MySQL is running, that <code>DB_HOST</code>, <code>DB_USER</code>, and <code>DB_PASSWORD</code> are correct, and that the database in <code>DB_NAME</code> actually exists.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><span>App can't find the database</span><span class="plus">+</span></div>
+        <div class="faq-a"><div class="faq-a-inner">Confirm the name in <code>DB_NAME</code> matches the database you created — it defaults to <code>Employees</code>.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><span>pyinstaller: command not found</span><span class="plus">+</span></div>
+        <div class="faq-a"><div class="faq-a-inner">PyInstaller isn't installed yet. Run <code>pip install pyinstaller</code>, then re-run your build command.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
 
-## 8. Build an Executable with PyInstaller
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="col">
+        <h5>Project</h5>
+        <a href="#quickstart">Quick start</a>
+        <a href="#schema">Database schema</a>
+        <a href="./dist/EmployeeManagementSystem.exe">Download .exe</a>
+      </div>
+      <div class="col">
+        <h5>Contributing</h5>
+        <p>Fork → branch → change → pull request.</p>
+        <a href="CONTRIBUTING.md">Contribution guide →</a>
+      </div>
+      <div class="col">
+        <h5>License</h5>
+        <p>MIT License</p>
+        <a href="LICENSE">View LICENSE →</a>
+      </div>
+    </div>
+    <div class="fine">
+      <span>employees.db — a desktop app, nothing more.</span>
+      <span>Python 3.9+ · Tkinter · MySQL</span>
+    </div>
+  </div>
+</footer>
 
-This project already includes a PyInstaller spec file.
+<script>
+  // generic tab controller — works for any .tabs block by id prefix
+  function setupTabs(containerId, panelSuffix){
+    const container = document.getElementById(containerId);
+    if(!container) return;
+    const tabs = container.querySelectorAll('.tab');
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const group = container.parentElement;
+        group.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        const target = document.getElementById(tab.dataset.tab + panelSuffix);
+        if(target) target.classList.add('active');
+      });
+    });
+  }
+  setupTabs('os-tabs', '-panel');
+  setupTabs('env-tabs', '-panel');
 
-### Build using the spec file
+  function copyCode(btn){
+    const code = btn.closest('.code').querySelector('code').innerText;
+    navigator.clipboard.writeText(code).then(() => {
+      const original = btn.textContent;
+      btn.textContent = 'Copied';
+      setTimeout(() => btn.textContent = original, 1400);
+    });
+  }
 
-```bash
-pyinstaller --clean EmployeeManagementSystem.spec
-```
+  document.querySelectorAll('.faq-item').forEach(item => {
+    item.querySelector('.faq-q').addEventListener('click', () => {
+      const isOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+      if(!isOpen) item.classList.add('open');
+    });
+  });
+</script>
 
-The executable will be generated in the dist folder.
-
-### Manual build command
-
-```bash
-pyinstaller --onefile --windowed --icon app.ico --add-data "app.png;." --add-data "app.ico;." --name EmployeeManagementSystem main.py
-```
-
-> On macOS/Linux, replace the semicolon with a colon in the add-data paths.
-
-## User Guidance
-
-- Make sure MySQL is running before launching the app.
-- If the app shows a connection error, verify your database credentials and server status.
-- If the app cannot find the database, confirm that the database name matches DB_NAME.
-- If you are using XAMPP, check that the MySQL service is running from the XAMPP Control Panel.
-- The app uses the Employees database by default. You can change it using environment variables.
-
-## Troubleshooting
-
-### Module Not Found Error
-
-If you see an error like mysql.connector not found:
-
-```bash
-pip install mysql-connector-python
-```
-
-### Database Connection Failed
-
-Check the following:
-
-- MySQL service is running
-- Username and password are correct
-- DB_HOST is correct
-- Database name exists
-
-### PyInstaller Not Found
-
-```bash
-pip install pyinstaller
-```
-
-## Contributing
-
-Contributions are welcome.
-
-Please see [CONTRIBUTING.md](CONTRIBUTING.md) for the full contribution guide.
-
-1. Fork the repository
-2. Create a new branch
-3. Make your changes
-4. Submit a pull request
-
-Please keep changes clean, documented, and tested where possible.
-
-## License
-
-This project is licensed under the MIT License.
-
-See the LICENSE file for more details.
+</body>
+</html>
